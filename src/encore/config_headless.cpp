@@ -94,8 +94,8 @@ void Config_Headless::LoadConstantSettings() {
 
     // Utility
     // not going to support these for now
-    Settings::values.dump_textures = false;
-    Settings::values.custom_textures = false;
+    Settings::values.dump_textures = true;
+    Settings::values.custom_textures = true;
     Settings::values.preload_textures = false;
     Settings::values.async_custom_loading = false;
 
