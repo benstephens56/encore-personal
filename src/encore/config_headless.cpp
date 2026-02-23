@@ -114,7 +114,7 @@ void Config_Headless::LoadConstantSettings() {
     Settings::values.input_device = "None";
 
     // Data Storage
-    Settings::values.use_custom_storage = false; // we'll control this with the user directory
+    Settings::values.use_custom_storage = true; // we'll control this with the user directory
 
     // System
     Settings::values.init_time_offset = 0; // offset to real time?
