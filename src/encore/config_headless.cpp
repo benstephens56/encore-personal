@@ -219,6 +219,8 @@ void Config_Headless::LoadNonSyncSettings() {
     ReadSetting(Settings::values.resolution_factor);
     ReadSetting(Settings::values.texture_filter);
     ReadSetting(Settings::values.texture_sampling);
+    ReadSetting(Settings::values.dump_textures);
+    ReadSettings(Settings::values.custom_textures);
 
     ReadSetting(Settings::values.mono_render_option);
     ReadSetting(Settings::values.render_3d);
