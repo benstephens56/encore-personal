@@ -506,8 +506,8 @@ struct Values {
     SwitchableSetting<std::string> pp_shader_name{"none (builtin)", "pp_shader_name"};
     SwitchableSetting<std::string> anaglyph_shader_name{"dubois (builtin)", "anaglyph_shader_name"};
 
-    SwitchableSetting<bool> dump_textures{false, "dump_textures"};
-    SwitchableSetting<bool> custom_textures{false, "custom_textures"};
+    SwitchableSetting<bool> dump_textures{true, "dump_textures"};
+    SwitchableSetting<bool> custom_textures{true, "custom_textures"};
     SwitchableSetting<bool> preload_textures{false, "preload_textures"};
     SwitchableSetting<bool> async_custom_loading{true, "async_custom_loading"};
 
