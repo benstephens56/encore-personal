@@ -40,7 +40,7 @@ RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
       renderer{renderer_}, resolution_scale_factor{renderer.GetResolutionScaleFactor()},
       filter{Settings::values.texture_filter.GetValue()},
       dump_textures{Settings::values.dump_textures.GetValue()},
-      use_custom_textures{Settings::values.custom_textures.GetValue()} {
+      use_custom_textures{false} {
     using TextureConfig = Pica::TexturingRegs::TextureConfig;
 
     // Create null handles for all cached resources
