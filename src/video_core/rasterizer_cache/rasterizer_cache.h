@@ -97,12 +97,20 @@ void RasterizerCache<T>::TickFrame() {
 
     const u32 scale_factor = renderer.GetResolutionScaleFactor();
     const bool resolution_scale_changed = resolution_scale_factor != scale_factor;
-    const bool use_custom_texture_changed =
-        Settings::values.custom_textures.GetValue() != use_custom_textures;
+
+    const bool new_dump_textures = Settings::values.dump_textures.GetValue();
+    const bool dump_textures_changed = dump_textures != new_dump_textures;
+
+    const bool new_use_custom_textures = Settings::values.custom_textures.GetValue();
+    const bool use_custom_texture_changed = new_use_custom_textures != use_custom_textures;
+
+    if (dump_textures_changed) {
+        dump_textures = new_dump_textures;
+    }
 
     if (resolution_scale_changed || use_custom_texture_changed) {
         resolution_scale_factor = scale_factor;
-        use_custom_textures = Settings::values.custom_textures.GetValue();
+        use_custom_textures = new_use_custom_textures;
         if (use_custom_textures) {
             custom_tex_manager.FindCustomTextures();
         }
