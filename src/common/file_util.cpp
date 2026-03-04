@@ -708,9 +708,14 @@ void ResetUserPath() {
 void SetUserPath(const std::string& path) {
     std::string& user_path = g_paths[UserPath::UserDir];
 
-    if (!path.empty() && CreateFullPath(path)) {
-        LOG_INFO(Common_Filesystem, "Using {} as the user directory", path);
-        user_path = path;
+    std::string normalized_path = path;
+    if (!normalized_path.empty() && !normalized_path.ends_with(DIR_SEP)) {
+        normalized_path += DIR_SEP;
+    }
+
+    if (!normalized_path.empty() && CreateFullPath(normalized_path)) {
+        LOG_INFO(Common_Filesystem, "Using {} as the user directory", normalized_path);
+        user_path = normalized_path;
         g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
         g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
     } else {

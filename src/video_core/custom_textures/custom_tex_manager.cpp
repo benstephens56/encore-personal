@@ -29,10 +29,6 @@ constexpr std::size_t MAX_UPLOADS_PER_TICK = 8;
 
 using namespace Common::Literals;
 
-bool IsPow2(u32 value) {
-    return value != 0 && (value & (value - 1)) == 0;
-}
-
 CustomFileFormat MakeFileFormat(std::string_view ext) {
     if (ext == "png") {
         return CustomFileFormat::PNG;
@@ -184,6 +180,12 @@ void CustomTexManager::PrepareDumping(u64 title_id) {
     // Write template config file
     const std::string dump_path =
         fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::DumpDir), title_id);
+    LOG_INFO(Render, "Preparing texture dump path: {}", dump_path);
+    if (!FileUtil::CreateFullPath(dump_path)) {
+        LOG_ERROR(Render, "Unable to create {}", dump_path);
+        return;
+    }
+
     const std::string pack_config = dump_path + "pack.json";
     if (FileUtil::Exists(pack_config)) {
         return;
@@ -200,8 +202,15 @@ void CustomTexManager::PrepareDumping(u64 title_id) {
     options["use_new_hash"] = true;
 
     FileUtil::IOFile file{pack_config, "w"};
+    if (!file.IsOpen()) {
+        LOG_ERROR(Render, "Failed to open {} for writing", pack_config);
+        return;
+    }
+
     const std::string output = json.dump(4);
-    file.WriteString(output);
+    if (file.WriteString(output) != output.size()) {
+        LOG_ERROR(Render, "Failed to write {}", pack_config);
+    }
 }
 
 void CustomTexManager::PreloadTextures(const std::atomic_bool& stop_run,
@@ -258,13 +267,8 @@ void CustomTexManager::DumpTexture(const SurfaceParams& params, u32 level, std::
         return;
     }
 
-    // Make sure the texture size is a power of 2.
-    // If not, the surface is probably a framebuffer
-    if (!IsPow2(width) || !IsPow2(height)) {
-        LOG_WARNING(Render, "Not dumping {:016X} because size isn't a power of 2 ({}x{})",
-                    data_hash, width, height);
-        return;
-    }
+    // Many 3DS textures are non-power-of-two, so don't reject NPOT surfaces here.
+    // Framebuffers are already filtered by the caller (SurfaceFlagBits::RenderTarget).
 
     const u32 decoded_size = width * height * 4;
     std::vector<u8> pixels(data_size + decoded_size);
@@ -277,13 +281,16 @@ void CustomTexManager::DumpTexture(const SurfaceParams& params, u32 level, std::
         DecodeTexture(params, params.addr, params.end, encoded, decoded,
                       params.type == SurfaceType::Color);
         Common::FlipRGBA8Texture(decoded, width, height);
-        image_interface.EncodePNG(dump_path, width, height, decoded);
+        return image_interface.EncodePNG(dump_path, width, height, decoded);
     };
-    if (!workers) {
-        CreateWorkers();
+
+    // Dump synchronously to guarantee files are written even when frontends
+    // reset/shutdown quickly (queued worker tasks can be dropped on teardown).
+    if (dump()) {
+        dumped_textures.insert(data_hash);
+    } else {
+        LOG_WARNING(Render, "Failed to dump texture {:016X}; will retry next upload", data_hash);
     }
-    workers->QueueWork(std::move(dump));
-    dumped_textures.insert(data_hash);
 }
 
 Material* CustomTexManager::GetMaterial(u64 data_hash) {
