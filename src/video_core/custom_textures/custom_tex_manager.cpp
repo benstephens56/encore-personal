@@ -29,10 +29,6 @@ constexpr std::size_t MAX_UPLOADS_PER_TICK = 8;
 
 using namespace Common::Literals;
 
-bool IsPow2(u32 value) {
-    return value != 0 && (value & (value - 1)) == 0;
-}
-
 CustomFileFormat MakeFileFormat(std::string_view ext) {
     if (ext == "png") {
         return CustomFileFormat::PNG;
@@ -258,13 +254,8 @@ void CustomTexManager::DumpTexture(const SurfaceParams& params, u32 level, std::
         return;
     }
 
-    // Make sure the texture size is a power of 2.
-    // If not, the surface is probably a framebuffer
-    if (!IsPow2(width) || !IsPow2(height)) {
-        LOG_WARNING(Render, "Not dumping {:016X} because size isn't a power of 2 ({}x{})",
-                    data_hash, width, height);
-        return;
-    }
+    // Many 3DS textures are non-power-of-two, so don't reject NPOT surfaces here.
+    // Framebuffers are already filtered by the caller (SurfaceFlagBits::RenderTarget).
 
     const u32 decoded_size = width * height * 4;
     std::vector<u8> pixels(data_size + decoded_size);
