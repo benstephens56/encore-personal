@@ -180,6 +180,7 @@ void CustomTexManager::PrepareDumping(u64 title_id) {
     // Write template config file
     const std::string dump_path =
         fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::DumpDir), title_id);
+    LOG_INFO(Render, "Preparing texture dump path: {}", dump_path);
     if (!FileUtil::CreateFullPath(dump_path)) {
         LOG_ERROR(Render, "Unable to create {}", dump_path);
         return;
