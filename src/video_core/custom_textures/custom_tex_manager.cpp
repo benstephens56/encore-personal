@@ -270,10 +270,10 @@ void CustomTexManager::DumpTexture(const SurfaceParams& params, u32 level, std::
         Common::FlipRGBA8Texture(decoded, width, height);
         image_interface.EncodePNG(dump_path, width, height, decoded);
     };
-    if (!workers) {
-        CreateWorkers();
-    }
-    workers->QueueWork(std::move(dump));
+
+    // Dump synchronously to guarantee files are written even when frontends
+    // reset/shutdown quickly (queued worker tasks can be dropped on teardown).
+    dump();
     dumped_textures.insert(data_hash);
 }
 
