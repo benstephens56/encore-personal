@@ -97,12 +97,20 @@ void RasterizerCache<T>::TickFrame() {
 
     const u32 scale_factor = renderer.GetResolutionScaleFactor();
     const bool resolution_scale_changed = resolution_scale_factor != scale_factor;
-    const bool use_custom_texture_changed =
-        Settings::values.custom_textures.GetValue() != use_custom_textures;
+
+    const bool new_dump_textures = Settings::values.dump_textures.GetValue();
+    const bool dump_textures_changed = dump_textures != new_dump_textures;
+
+    const bool new_use_custom_textures = Settings::values.custom_textures.GetValue();
+    const bool use_custom_texture_changed = new_use_custom_textures != use_custom_textures;
+
+    if (dump_textures_changed) {
+        dump_textures = new_dump_textures;
+    }
 
     if (resolution_scale_changed || use_custom_texture_changed) {
         resolution_scale_factor = scale_factor;
-        use_custom_textures = Settings::values.custom_textures.GetValue();
+        use_custom_textures = new_use_custom_textures;
         if (use_custom_textures) {
             custom_tex_manager.FindCustomTextures();
         }
@@ -1009,8 +1017,10 @@ void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interva
     DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, staging.mapped,
                   runtime.NeedsConversion(surface.pixel_format));
 
-    const bool should_dump = False(surface.flags & SurfaceFlagBits::Custom) &&
-                             False(surface.flags & SurfaceFlagBits::RenderTarget);
+    // Only skip already-replaced custom surfaces.
+    // Some headless integration paths can mark regular texture uploads as render targets,
+    // which would otherwise prevent any texture dump output.
+    const bool should_dump = False(surface.flags & SurfaceFlagBits::Custom);
     if (dump_textures && should_dump) {
         const u64 hash = ComputeHash(load_info, upload_data);
         const u32 level = surface.LevelOf(load_info.addr);
