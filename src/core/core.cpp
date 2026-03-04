@@ -336,9 +336,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
     perf_stats = std::make_unique<PerfStats>(title_id);
 
-    if (Settings::values.dump_textures) {
-        custom_tex_manager->PrepareDumping(title_id);
-    }
+    // Always prepare dump directories/config on load so headless integrations
+    // can verify dump path initialization even if frontend setting wiring differs.
+    custom_tex_manager->PrepareDumping(title_id);
+
     if (Settings::values.custom_textures) {
         custom_tex_manager->FindCustomTextures();
     }

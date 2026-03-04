@@ -6,6 +6,7 @@
 #include <locale>
 
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -178,6 +179,20 @@ void Config_Headless::LoadSyncSettings() {
     FileUtil::ResetUserPath();
     FileUtil::SetUserPath(user_directory_path_buffer);
 
+    const std::string dump_textures_path =
+        FileUtil::GetUserPath(FileUtil::UserPath::DumpDir) + "textures/";
+    if (!FileUtil::CreateFullPath(dump_textures_path)) {
+        LOG_ERROR(Common_Filesystem, "Failed to create texture dump directory: {}",
+                  dump_textures_path);
+    }
+
+    const std::string load_textures_path =
+        FileUtil::GetUserPath(FileUtil::UserPath::LoadDir) + "textures/";
+    if (!FileUtil::CreateFullPath(load_textures_path)) {
+        LOG_ERROR(Common_Filesystem, "Failed to create custom texture load directory: {}",
+                  load_textures_path);
+    }
+
     // System
     ReadSetting(Settings::values.is_new_3ds);
     ReadSetting(Settings::values.lle_applets);
@@ -219,8 +234,12 @@ void Config_Headless::LoadNonSyncSettings() {
     ReadSetting(Settings::values.resolution_factor);
     ReadSetting(Settings::values.texture_filter);
     ReadSetting(Settings::values.texture_sampling);
-    ReadSetting(Settings::values.dump_textures);
-    ReadSettings(Settings::values.custom_textures);
+
+    // Keep these enabled in headless mode for BizHawk integration compatibility.
+    // Some frontends still expose legacy setting keys and may return false for
+    // the modern labels, which would silently disable dumping/replacements.
+    Settings::values.dump_textures = true;
+    Settings::values.custom_textures = true;
 
     ReadSetting(Settings::values.mono_render_option);
     ReadSetting(Settings::values.render_3d);
