@@ -268,13 +268,16 @@ void CustomTexManager::DumpTexture(const SurfaceParams& params, u32 level, std::
         DecodeTexture(params, params.addr, params.end, encoded, decoded,
                       params.type == SurfaceType::Color);
         Common::FlipRGBA8Texture(decoded, width, height);
-        image_interface.EncodePNG(dump_path, width, height, decoded);
+        return image_interface.EncodePNG(dump_path, width, height, decoded);
     };
 
     // Dump synchronously to guarantee files are written even when frontends
     // reset/shutdown quickly (queued worker tasks can be dropped on teardown).
-    dump();
-    dumped_textures.insert(data_hash);
+    if (dump()) {
+        dumped_textures.insert(data_hash);
+    } else {
+        LOG_WARNING(Render, "Failed to dump texture {:016X}; will retry next upload", data_hash);
+    }
 }
 
 Material* CustomTexManager::GetMaterial(u64 data_hash) {
