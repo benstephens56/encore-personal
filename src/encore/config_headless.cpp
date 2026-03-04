@@ -219,8 +219,12 @@ void Config_Headless::LoadNonSyncSettings() {
     ReadSetting(Settings::values.resolution_factor);
     ReadSetting(Settings::values.texture_filter);
     ReadSetting(Settings::values.texture_sampling);
-    ReadSetting(Settings::values.dump_textures);
-    ReadSettings(Settings::values.custom_textures);
+
+    // Keep these enabled in headless mode for BizHawk integration compatibility.
+    // Some frontends still expose legacy setting keys and may return false for
+    // the modern labels, which would silently disable dumping/replacements.
+    Settings::values.dump_textures = true;
+    Settings::values.custom_textures = true;
 
     ReadSetting(Settings::values.mono_render_option);
     ReadSetting(Settings::values.render_3d);
